@@ -163,6 +163,12 @@ export default function AuthScreen() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Failed to send OTP');
 
+            if (mode === 'signup' && data.is_existing_user) {
+                showAlert('info', 'Already Registered', 'This email is already registered. Please sign in instead.', 'Sign In', () => toggleMode('signin'));
+                setLoading(false);
+                return;
+            }
+
             setStep('OTP');
             showAlert('success', 'OTP Sent', 'Please check your email for the verification code.');
         } catch (error: any) {
@@ -192,10 +198,9 @@ export default function AuthScreen() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Verification failed');
 
-            // Store token immediately
+            // Store token immediately for password set call
             await SecureStore.setItemAsync('token', data.access_token);
             await SecureStore.setItemAsync('user_role', 'USER');
-            setIsLoggedIn(true);
 
             if (isReset) {
                 setStep('PASSWORD');
@@ -205,6 +210,7 @@ export default function AuthScreen() {
                 showAlert('success', 'Registration Successful', 'Please set a password to complete your account.');
             } else {
                 // Signed in via OTP
+                setIsLoggedIn(true);
                 showAlert(
                     'success',
                     'Welcome back!',
@@ -246,6 +252,7 @@ export default function AuthScreen() {
             const data = await response.json();
             if (!response.ok) throw new Error(data.detail || 'Failed to set password');
 
+            setIsLoggedIn(true);
             showAlert('success', 'Success', mode === 'forgot' ? 'Password reset successful!' : 'Account updated successfully!');
             router.replace('/location');
         } catch (error: any) {

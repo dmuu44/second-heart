@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, ActivityIndicator, Dimensions, Alert, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Dimensions, Alert, BackHandler, ToastAndroid, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { MapPin, Bell, Star } from 'lucide-react-native';
@@ -59,6 +60,13 @@ export default function HomeScreen() {
         }, [])
     );
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            fetchUnreadCount();
+        }, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
     const fetchUnreadCount = async () => {
         try {
             const token = await SecureStore.getItemAsync('token');
@@ -73,13 +81,9 @@ export default function HomeScreen() {
         }
     };
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async () => {
+    const loadData = async (showLoader = true) => {
         try {
-            setLoading(true);
+            if (showLoader) setLoading(true);
             // Get Location
             const loc = await SecureStore.getItemAsync('user_location');
             const cityParam = loc && loc !== 'Select Location' ? loc : '';
@@ -98,20 +102,35 @@ export default function HomeScreen() {
         } catch (error) {
             console.error("Failed to load home data", error);
         } finally {
-            setLoading(false);
+            if (showLoader) setLoading(false);
         }
     };
 
+    useEffect(() => {
+        loadData(true);
+        const interval = setInterval(() => {
+            loadData(false);
+        }, 10000); // 10 seconds
+        return () => clearInterval(interval);
+    }, []);
+
     useFocusEffect(
         useCallback(() => {
-            loadData();
+            loadData(false);
         }, [])
     );
+
 
     const renderMovieCard = (movie: Movie) => (
         <TouchableOpacity key={movie.id} style={styles.movieCard} onPress={() => router.push(`/movie/${movie.id}`)}>
             {/* Using search for now as detail page isn't main task, or maybe just alert */}
-            <Image source={{ uri: movie.poster_url || 'https://via.placeholder.com/150' }} style={styles.poster} />
+            <Image 
+                source={{ uri: movie.poster_url || 'https://via.placeholder.com/150' }} 
+                style={styles.poster} 
+                contentFit="cover" 
+                transition={200}
+                cachePolicy="memory-disk"
+            />
             <LinearGradient colors={['transparent', 'rgba(0,0,0,0.9)']} style={styles.gradient} />
             <View style={styles.movieInfo}>
                 <Text style={styles.movieTitle} numberOfLines={1}>{movie.title}</Text>
@@ -129,7 +148,9 @@ export default function HomeScreen() {
                 <Image
                     source={{ uri: movie.poster_url || 'https://via.placeholder.com/150' }}
                     style={styles.verticalPoster}
-                    resizeMode="cover"
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
                 />
                 <View style={styles.verticalInfo}>
                     <Text style={styles.verticalTitle}>{movie.title}</Text>

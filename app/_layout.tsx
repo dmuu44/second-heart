@@ -16,7 +16,7 @@ function RootLayoutNav() {
     useEffect(() => {
         if (loading) return;
 
-        const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'auth' || segments[0] === 'index';
+        const inAuthGroup = !segments[0] || segments[0] === '(auth)' || segments[0] === 'auth' || segments[0] === 'index';
 
         if (!isLoggedIn && !inAuthGroup) {
             // Redirect to auth if not logged in and not in auth group
