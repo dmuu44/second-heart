@@ -1,0 +1,15 @@
+node_modules
+.git
+.env
+.env.*
+.expo
+dist
+build
+coverage
+*.log
+*.pem
+*.tfstate
+*.tfstate.*
+terraform
+Two-heartes
+First-heart
